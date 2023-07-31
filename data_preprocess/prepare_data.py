@@ -3,13 +3,15 @@ import subprocess
 import textgrid as textgrid_utils
 import argparse
 import pathlib
+import soundfile
 
 def create_tsv(file_name, path, files):
     with open(file_name, 'w') as f:
         f.write(path + '\n')
     for i, file in enumerate(files):
+        n_frames = soundfile.info(os.path.join(path,file)).frames
         with open(file_name, 'a+') as f:
-            f.write(f'{file}\t{i}\n')
+            f.write(f'{file}\t{n_frames}\n')
 
 
 def convert_wav_2_16hz(path, verbose):
