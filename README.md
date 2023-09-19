@@ -1,7 +1,8 @@
 # soundscape
 
 ## 1. Installation
-- Follow the installation instructions of fairseq: https://pypi.org/project/fairseq/  
+- Follow the installation instructions of fairseq: https://github.com/facebookresearch/fairseq/tree/main#requirements-and-installation
+- Go back to the soundscape repo
 - Run:
 ```
 pip install -r requirements.txt
