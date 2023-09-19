@@ -32,7 +32,7 @@ llvmlite=0.40.1=pypi_0
 matplotlib=3.7.2=pypi_0
 ncurses=6.4=hcb278e6_0
 numba=0.57.1=pypi_0
-numpy=1.22.0=pypi_0
+numpy
 openssl=3.1.1=hd590300_1
 packaging=23.1=pypi_0
 pandas=1.5.2=pypi_0

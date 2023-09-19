@@ -9,7 +9,7 @@ pip install -r requirements.txt
 
 ## 2. Using the trajectory demo
 To render the notebook plots, use nbviewer. For instance, for the Korean dataset notebook, use:  
-https://nbviewer.org/github/bronichern/soundscape/blob/main/kr_trajectories.ipynb
+https://nbviewer.org/github/bronichern/percept_sim/blob/main/kr_trajectories.ipynb
   
 To change the plots, you need hubert's features.  To change the korean notebook, you can download the files [Here](https://drive.google.com/drive/folders/1ZkDLYDqN9BWv_5frwNLi_lRvexw0f0a0?usp=share_link)
 To generate other features, see the instructions in *section 3*.  
