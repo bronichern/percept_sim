@@ -1,5 +1,6 @@
+
 library (tidyverse)
-library (glmmTMB)
+library (betareg)
 
 # Read in intelligibility data
 intelligibility <- read.delim(file="intelligibilityScores.txt",as.is=T)
@@ -20,7 +21,7 @@ talker_acoustics <- talker_acoustics %>% mutate (Subject_1_ID = str_remove(talke
 mfcc_results_frame <- data.frame(mean_distance_dtw=-999)
 # for each lang
 for (lang in c("CMN","SHS","KR")){
-  #Extract MFCC files
+  #Extract MFC files
   if (lang == "KR"){
     # read in and separate out subject info
     distance_data <- read.csv("./MFCC_DTW_baseline/KR/KR_MFCC_BASELINE.csv") %>% separate(speaker1_word_wid,into=c("Subject_1_ID","N1","Word","N2"),sep="_") %>% 
@@ -89,10 +90,10 @@ intelligibility_filenames <- read.csv("intelligibility_filenames.csv")
 beta_results <- data.frame(layer = c(-999))
 regression_results <- data.frame(beta_weight = c(-999))
 # for each dimensionality
-for (d in c("TSNE","FullDim")){
+d <- "TSNE"
   kr_files <- list.files(path=paste("./",d,"/KR",sep=""),full.names = TRUE)
 # for each layer
-for (i in 1: length(kr_files)){
+  i <- 4
   
   # Match the sentences used in the distance-from-L1 calculation so that they are the same as those used
   # in intelligibility testing
@@ -180,81 +181,14 @@ for (i in 1: length(kr_files)){
   talker_frame_intelligibility$center_mean_distance <- scale(talker_frame_intelligibility$mean_distance, center=T, scale=F)
   # scale distance values
   talker_frame_scaled_intelligibility$center_mean_distance <- scale(talker_frame_scaled_intelligibility$mean_distance, center=T, scale=T)
-  # calculate Beta Regression
-  betareg_distance <- glmmTMB(intelligibility~center_SNR+center_mean_distance+(1|Subject_1_ID),data=talker_frame_intelligibility,family=beta_family(link="logit"))
-  sig_calc <- anova(betareg_distance,update(betareg_distance,.~.-center_mean_distance)) 
-  
-  #store results, extracting results for distance
-  if (beta_results$layer[1] == -999){
-    beta_results <- data.frame(dimensionality = c(d),
-                               layer = c(as.integer(substr(strsplit(kr_files[i],"layer")[[1]][2],1,2))),
-                               beta_intelligibility=summary(betareg_distance)$coefficients$cond[3,1],
-                               se_beta_intelligibility = summary(betareg_distance)$coefficients$cond[3,2],
-                               chi_sq_beta_intelligibility = sig_calc$Chisq[2],
-                               p_chi_sq_beta_intelligibility = sig_calc$"Pr(>Chisq)"[2])
-  } else
-    beta_results <- rbind(beta_results,data.frame(dimensionality = c(d),
-                                                  layer = c(as.integer(substr(strsplit(kr_files[i],"layer")[[1]][2],1,2))),
-                                                  beta_intelligibility=summary(betareg_distance)$coefficients$cond[3,1],
-                                                  se_beta_intelligibility = summary(betareg_distance)$coefficients$cond[3,2],
-                                                  chi_sq_beta_intelligibility = sig_calc$Chisq[2],
-                                                  p_chi_sq_beta_intelligibility = sig_calc$"Pr(>Chisq)"[2]))
-  
-  # Save results
-  write.csv(beta_results,"intelligibility_by_distance_results.csv",row.names=F)
   
   # build beta regression with all factors
-  betareg_acoustics_distance <- glmmTMB(intelligibility~center_SNR+center_mean_distance+mean_distance_dtw+Sum.of..npause+Average.of..articRate.nsyll.phonationtime.+Average.of..f0Mean.Hz.+Average.of..f0CoefVar+dispersionMean.Bark.+sylReduction.nsyll.orthSyll.+(1|Subject_1_ID),data=talker_frame_intelligibility,family=beta_family(link="logit"))
-  betareg_results <- summary(betareg_acoustics_distance$sdr)
-  # initialize data frames for storing results
-  rezo <- data.frame(variable = rep("dummy",length(3:11)), beta_weight = 0,std_err = 0,chisq = 0, pval=0, layer=as.integer(substr(strsplit(kr_files[i],"layer")[[1]][2],1,2)), dimensionality=d)
-  # extract predictors from model
-  predictors <- attr(betareg_acoustics_distance$modelInfo$terms$cond$fixed,"predvars")
-  #Regression results for each predictor
-  for (j in 3:11){
-    # select specific variable
-    rezo$variable[j-2] <- as.character(predictors[[j]])
-    rezo$beta_weight[j-2] <- betareg_results[j-1,1]
-    rezo$std_err[j-2] <- betareg_results[j-1,2]
-    # calculate change in likelihood for model including this predictor vs. lacking the predictor (= chi-sq statistic for likelihood ratio test)
-    sig_calc <- anova(betareg_acoustics_distance,update(betareg_acoustics_distance,as.formula(paste(".~.-",predictors[[j]]))))
-    rezo$chisq[j-2] <- sig_calc$Chisq[2]
-    rezo$pval[j-2] <- sig_calc$"Pr(>Chisq)"[2]
-  }
-  rezo$proportion_exclude_SNR <- c(0,sapply(rezo$chisq[2:9],function (x) x/sum(rezo$chisq[2:9])))
+
+  betareg_acoustics <- betareg(intelligibility~center_SNR+mean_distance_dtw+Sum.of..npause+Average.of..articRate.nsyll.phonationtime.+Average.of..f0Mean.Hz.+Average.of..f0CoefVar+dispersionMean.Bark.+sylReduction.nsyll.orthSyll.,data=talker_frame_intelligibility,link = "logit")
+  summary(betareg_acoustics)
+  # Pseudo R-squared: 0.484
   
-  # build beta regression with all factors
-  scaled_betareg_acoustics_distance <- glmmTMB(intelligibility~center_SNR+center_mean_distance+mean_distance_dtw+Sum.of..npause+Average.of..articRate.nsyll.phonationtime.+Average.of..f0Mean.Hz.+Average.of..f0CoefVar+dispersionMean.Bark.+sylReduction.nsyll.orthSyll.+(1|Subject_1_ID),data=talker_frame_scaled_intelligibility,family=beta_family(link="logit"))
-  scaled_betareg_results <- summary(scaled_betareg_acoustics_distance$sdr)
-  # initialize data frames for storing results
-  scaled_rezo <- data.frame(variable = rep("dummy",length(3:11)), beta_weight = 0,std_err = 0,chisq = 0, pval=0, layer=as.integer(substr(strsplit(kr_files[i],"layer")[[1]][2],1,2)), dimensionality=d)
-  # extract predictors from model
-  predictors <- attr(scaled_betareg_acoustics_distance$modelInfo$terms$cond$fixed,"predvars")
-  #Regression results for each predictor
-  for (j in 3:11){
-    # select specific variable
-    scaled_rezo$variable[j-2] <- as.character(predictors[[j]])
-    scaled_rezo$beta_weight[j-2] <- scaled_betareg_results[j-1,1]
-    scaled_rezo$std_err[j-2] <- scaled_betareg_results[j-1,2]
-    # calculate change in likelihood for model including this predictor vs. lacking the predictor (= chi-sq statistic for likelihood ratio test)
-    sig_calc <- anova(scaled_betareg_acoustics_distance,update(scaled_betareg_acoustics_distance,as.formula(paste(".~.-",predictors[[j]]))))
-    scaled_rezo$chisq[j-2] <- sig_calc$Chisq[2]
-    scaled_rezo$pval[j-2] <- sig_calc$"Pr(>Chisq)"[2]
-  }
-  scaled_rezo$proportion_exclude_SNR <- c(0,sapply(scaled_rezo$chisq[2:9],function (x) x/sum(scaled_rezo$chisq[2:9])))
-  # save results
-  if (regression_results$beta_weight[1] == -999){
-    regression_results <- rezo
-    scaled_regression_results <- scaled_rezo
-  } else {
-    regression_results <- rbind(regression_results,
-                                rezo)
-    scaled_regression_results <- rbind(scaled_regression_results,
-                                       scaled_rezo)
-  }
-  # write out results
-  write.csv(regression_results,"intelligibility_by_all_results.csv",row.names=F)
-  write.csv(scaled_regression_results,"intelligibility_by_all_results_scaled.csv",row.names=F)
+  betareg_acoustics_distance <- betareg(intelligibility~center_SNR+center_mean_distance+mean_distance_dtw+Sum.of..npause+Average.of..articRate.nsyll.phonationtime.+Average.of..f0Mean.Hz.+Average.of..f0CoefVar+dispersionMean.Bark.+sylReduction.nsyll.orthSyll.,data=talker_frame_intelligibility,link = "logit")
+  summary(betareg_acoustics_distance)
+  #Pseudo R-squared: 0.7232
   
-} # for each layer
-} # for each dimensionality

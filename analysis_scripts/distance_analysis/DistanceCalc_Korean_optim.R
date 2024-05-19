@@ -4,39 +4,21 @@
 library (tidyverse)
 
 # initialize data frame for storing results
-results_frame <- data.frame(analysis_method_label = "dummy")
+results_frame <- data.frame(filename = "dummy")
 
-for (analysis_method in c("UMAP","KPCA"))
-{
-kr_files <- list.files(path=paste("./",analysis_method,"/KR",sep=""),full.names = TRUE)
+kr_files <- list.files(path="./Parameters_search/SHS/HT1",full.names = TRUE)
 # for each file
 for (i in 1:length(kr_files)){
 
   # for each language 
   # CMN = Chinese Mandarin
   # SHS = Spanish Heritage Speakers
-  # KR = Korean
-  for (lang in c("CMN","SHS","KR")){
-    if (lang == "KR"){
-      # read in data
-      distance_data <- read.csv(kr_files[i])
-      # Get L2 data
-      L2_pairs_data <- distance_data %>% filter (grp == "K_EN") %>% 
-        # separate out speaker ID
-        separate_wider_delim(speaker1, names=c(NA,"Speaker_1_ID",NA,NA),delim="_") %>%
-        separate_wider_delim(speaker2, names=c(NA,"Speaker_2_ID",NA,NA),delim="_")
-      
-      # Get L1 data
-      L1_pairs_data <- distance_data %>% filter (grp == "E") %>% 
-        # separate out speaker ID
-        separate_wider_delim(speaker1, names=c(NA,"Speaker_1_ID",NA,NA),delim="_") %>%
-        separate_wider_delim(speaker2, names=c(NA,"Speaker_2_ID",NA,NA),delim="_")
-    }
-    else { #CMN, SHS data
+  for (lang in c("CMN","SHS")){
+     #CMN, SHS data
       # get file lists for 2 halves of sentence data
       # (corresponding to split on SpeechBox https://speechbox.linguistics.northwestern.edu/#!/home)
-      ht1_files <- list.files(path=paste("./",analysis_method,"/",lang,"/HT1",sep=""),full.names = TRUE)
-      ht2_files <- list.files(path=paste("./",analysis_method,"/",lang,"/HT2",sep=""),full.names = TRUE)
+      ht1_files <- list.files(path=paste("./Parameters_search/",lang,"/HT1",sep=""),full.names = TRUE)
+      ht2_files <- list.files(path=paste("./Parameters_search/",lang,"/HT2",sep=""),full.names = TRUE)
       
       # load distance data
       distance_data <- rbind(read.csv(ht1_files[i]),read.csv(ht2_files[i]))
@@ -56,7 +38,7 @@ for (i in 1:length(kr_files)){
         unite(col="Speaker_1_ID",c("Speaker_1_ID", "Gender","Language_Background"),remove=TRUE) %>%
         separate_wider_delim(speaker2, names=c(NA,"Speaker_2_ID","Gender","Language_Background",NA,NA,NA),delim="_") %>%
         unite(col="Speaker_2_ID",c("Speaker_2_ID", "Gender","Language_Background"),remove=TRUE)
-    }
+    
     
     # Calculate mean distance for pairs of L2 speakers for current language
     L2_pairs_mean <- L2_pairs_data  %>% 
@@ -82,21 +64,18 @@ for (i in 1:length(kr_files)){
     }
   
     # store results, extracting layer information from filename, and saving 2.5% and 97.5% percentile of bootstrap distribution
-    results_row <- data.frame(analysis_method_label = c(analysis_method),
-                              filename = c(substring(kr_files[i],first=27,last=str_length(kr_files[i])-5)), 
+    results_row <- data.frame(filename = c(substring(kr_files[i],first=27,last=str_length(kr_files[i])-4)), 
                               lang=lang,L1_L2_mean = mean(L2_pairs_mean$mean_distance)/mean(L1_pairs_mean$mean_distance),
                                 L1_L2_lower = sort(boot_sample_ratios)[25],
                                 L1_L2_upper = sort(boot_sample_ratios)[975])
     
     # if results_frame has just been initialized, replace with current row, otherwise append
-    if (results_frame$analysis_method_label[1] == "dummy"){
+    if (results_frame$filename[1] == "dummy"){
       results_frame <- results_row
       } else
         results_frame <- rbind(results_frame,results_row)
     
     # Save results
-    write.csv(results_frame,"distance_ratio_L1vL2_Other.csv",row.names=F)
+    write.csv(results_frame,"distance_ratio_L1vL2_Korean_optim.csv",row.names=F)
   } # for each language
   }# for each file
-
-} # for each analysis method

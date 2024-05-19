@@ -1,3 +1,4 @@
+
 library (tidyverse)
 library (glmmTMB)
 
@@ -19,18 +20,9 @@ talker_acoustics <- talker_acoustics %>% mutate (Subject_1_ID = str_remove(talke
 # read in DTW distances over MFCCs data
 mfcc_results_frame <- data.frame(mean_distance_dtw=-999)
 # for each lang
-for (lang in c("CMN","SHS","KR")){
-  #Extract MFCC files
-  if (lang == "KR"){
-    # read in and separate out subject info
-    distance_data <- read.csv("./MFCC_DTW_baseline/KR/KR_MFCC_BASELINE.csv") %>% separate(speaker1_word_wid,into=c("Subject_1_ID","N1","Word","N2"),sep="_") %>% 
-      separate(speaker2_word_wid,into=c("Subject_2_ID","N3","Word2","N4"),sep="_")
-    # Get L2 speaker IDs
-    summary_L2 <- distance_data %>% filter (group == "K_EN") %>% 
-      summarise (talkers1 = unique(Subject_1_ID),talkers2=unique(Subject_2_ID))
-    L2_talkers <- unique(c(summary_L2$talkers1,summary_L2$talkers2))
-    
-  } else {
+for (lang in c("CMN","SHS")){
+  #Extract MFC files
+  
     # read in and separate out subject info
     distance_data <- rbind (read.csv("./MFCC_DTW_baseline/CMN_SHS/HT1/cmn_shs_mfcc_baseline_ht1.csv"),
                             read.csv("./MFCC_DTW_baseline/CMN_SHS/HT2/cmn_shs_mfcc_baseline_ht2.csv")) %>% 
@@ -40,7 +32,7 @@ for (lang in c("CMN","SHS","KR")){
     summary_L2 <- distance_data %>% filter (group == paste(lang,"ENG",sep="_")) %>%
       reframe (talkers1 = unique(Subject_1_ID),talkers2=unique(Subject_2_ID))
     L2_talkers <- unique(c(summary_L2$talkers1,summary_L2$talkers2))
-  }
+
   # get relevant subset of data for distance between L2 and L1
   between_data <- distance_data %>% 
     filter (group=="BT",(Subject_1_ID %in% L2_talkers) | (Subject_2_ID %in% L2_talkers))  
@@ -50,11 +42,9 @@ for (lang in c("CMN","SHS","KR")){
   byTalker <- between_data %>% 
     group_by(L2_Subject_ID) %>% summarise (mean_distance_dtw = mean (Distance))
   # Harmonize Subject IDs for merging with intelligibility data
-  if (lang == "KR"){
-    byTalker$L2_Subject_ID <- paste("KEI",byTalker$L2_Subject_ID,sep="_")
-  } else {
+ 
     byTalker$L2_Subject_ID <- paste("ALL",byTalker$L2_Subject_ID,lang,sep="_")
-  }
+  
   # rename subject column for merging
   colnames(byTalker)[1] <- "Subject_1_ID"
   # store the data
@@ -86,12 +76,10 @@ scaled_intelligibility$center_SNR <- scale(intelligibility$SNR, center=T,scale=T
 intelligibility_filenames <- read.csv("intelligibility_filenames.csv")
 
 # initialize storage of beta regression results
-beta_results <- data.frame(layer = c(-999))
-regression_results <- data.frame(beta_weight = c(-999))
-# for each dimensionality
-for (d in c("TSNE","FullDim")){
-  kr_files <- list.files(path=paste("./",d,"/KR",sep=""),full.names = TRUE)
-# for each layer
+beta_results <- data.frame(filename = "dummy")
+regression_results <- data.frame(filename = "dummy")
+  kr_files <- list.files(path="./Parameters_search/SHS/HT1",full.names = TRUE)
+# for each file
 for (i in 1: length(kr_files)){
   
   # Match the sentences used in the distance-from-L1 calculation so that they are the same as those used
@@ -99,31 +87,12 @@ for (i in 1: length(kr_files)){
   # initialize frame for storing intelligibility data
   talker_frame <- data.frame(mean_distance=c(-999))
   # for each lang
-  for (lang in c("CMN","SHS","KR")){
+  for (lang in c("CMN","SHS")){
     
-    # Process Korean files
-    if (lang == "KR"){
-      distance_data <- read.csv(kr_files[i])
-      
-      # select between-group (L2 vs. L1) comparisons 
-      # convert filename conventions to match acoustic analysis
-      # (distance data has _cnv after each name, acoustics does not)
-      # even though using Subject 2 (containing Korean participant IDs),
-      # use Subject 1 for consistency across all speaker groups and intelligibility data file
-      harmonized_distance_data <- distance_data %>% filter(grp=="BT") %>% 
-        mutate( allsstar_file = str_remove(speaker2,"_cnv")) %>%
-        separate(speaker2,into=c("Subject_1_ID","sentence"),sep="_EN")  
-      
-      # For distance analysis, select only those observations that are in Korean traditional acoustic analysis data
-      harmonized_distance_data_match <- harmonized_distance_data %>% filter (allsstar_file %in% intelligibility_filenames$allsstar_file[intelligibility_filenames$language_background==lang])
-      
-      # Get mean distance 
-      byTalkerDistanceData <- harmonized_distance_data_match %>% group_by(Subject_1_ID) %>% summarise (mean_distance = mean(Distance))
-    } else {
       # Processes Chinese or Spanish Data
       # retrieve file list
-      ht1_files <- list.files(path=paste("./",d,"/",lang,"/HT1",sep=""),full.names = TRUE)
-      ht2_files <- list.files(path=paste("./",d,"/",lang,"/HT2",sep=""),full.names = TRUE)
+      ht1_files <- list.files(path=paste("./Parameters_search/",lang,"/HT1",sep=""),full.names = TRUE)
+      ht2_files <- list.files(path=paste("./Parameters_search/",lang,"/HT2",sep=""),full.names = TRUE)
       # Read in distance data
       distance_data <- rbind(read.csv(ht1_files[i]),read.csv(ht2_files[i]))
       
@@ -164,7 +133,7 @@ for (i in 1: length(kr_files)){
       
       # Get mean distance
       byTalkerDistanceData <- harmonized_distance_data_match %>% group_by(Subject_1_ID) %>% summarise (mean_distance = mean (Distance))
-    }
+  
     if (talker_frame$mean_distance[1] == -999){
       talker_frame <- byTalkerDistanceData
     } else
@@ -185,29 +154,28 @@ for (i in 1: length(kr_files)){
   sig_calc <- anova(betareg_distance,update(betareg_distance,.~.-center_mean_distance)) 
   
   #store results, extracting results for distance
-  if (beta_results$layer[1] == -999){
-    beta_results <- data.frame(dimensionality = c(d),
-                               layer = c(as.integer(substr(strsplit(kr_files[i],"layer")[[1]][2],1,2))),
+  if (beta_results$filename[1] == "dummy"){
+    beta_results <- data.frame(filename = c(substring(kr_files[i],first=27,last=str_length(kr_files[i])-5)),
                                beta_intelligibility=summary(betareg_distance)$coefficients$cond[3,1],
                                se_beta_intelligibility = summary(betareg_distance)$coefficients$cond[3,2],
                                chi_sq_beta_intelligibility = sig_calc$Chisq[2],
                                p_chi_sq_beta_intelligibility = sig_calc$"Pr(>Chisq)"[2])
   } else
-    beta_results <- rbind(beta_results,data.frame(dimensionality = c(d),
-                                                  layer = c(as.integer(substr(strsplit(kr_files[i],"layer")[[1]][2],1,2))),
+    beta_results <- rbind(beta_results,data.frame(filename = c(substring(kr_files[i],first=27,last=str_length(kr_files[i])-5)),
                                                   beta_intelligibility=summary(betareg_distance)$coefficients$cond[3,1],
                                                   se_beta_intelligibility = summary(betareg_distance)$coefficients$cond[3,2],
                                                   chi_sq_beta_intelligibility = sig_calc$Chisq[2],
                                                   p_chi_sq_beta_intelligibility = sig_calc$"Pr(>Chisq)"[2]))
   
   # Save results
-  write.csv(beta_results,"intelligibility_by_distance_results.csv",row.names=F)
+  write.csv(beta_results,"intelligibility_by_distance_results_Korean_optim_test.csv",row.names=F)
   
   # build beta regression with all factors
   betareg_acoustics_distance <- glmmTMB(intelligibility~center_SNR+center_mean_distance+mean_distance_dtw+Sum.of..npause+Average.of..articRate.nsyll.phonationtime.+Average.of..f0Mean.Hz.+Average.of..f0CoefVar+dispersionMean.Bark.+sylReduction.nsyll.orthSyll.+(1|Subject_1_ID),data=talker_frame_intelligibility,family=beta_family(link="logit"))
   betareg_results <- summary(betareg_acoustics_distance$sdr)
   # initialize data frames for storing results
-  rezo <- data.frame(variable = rep("dummy",length(3:11)), beta_weight = 0,std_err = 0,chisq = 0, pval=0, layer=as.integer(substr(strsplit(kr_files[i],"layer")[[1]][2],1,2)), dimensionality=d)
+  rezo <- data.frame(variable = rep("dummy",length(3:11)), beta_weight = 0,std_err = 0,chisq = 0, pval=0,
+                     filename = c(substring(kr_files[i],first=27,last=str_length(kr_files[i])-5)))
   # extract predictors from model
   predictors <- attr(betareg_acoustics_distance$modelInfo$terms$cond$fixed,"predvars")
   #Regression results for each predictor
@@ -227,7 +195,8 @@ for (i in 1: length(kr_files)){
   scaled_betareg_acoustics_distance <- glmmTMB(intelligibility~center_SNR+center_mean_distance+mean_distance_dtw+Sum.of..npause+Average.of..articRate.nsyll.phonationtime.+Average.of..f0Mean.Hz.+Average.of..f0CoefVar+dispersionMean.Bark.+sylReduction.nsyll.orthSyll.+(1|Subject_1_ID),data=talker_frame_scaled_intelligibility,family=beta_family(link="logit"))
   scaled_betareg_results <- summary(scaled_betareg_acoustics_distance$sdr)
   # initialize data frames for storing results
-  scaled_rezo <- data.frame(variable = rep("dummy",length(3:11)), beta_weight = 0,std_err = 0,chisq = 0, pval=0, layer=as.integer(substr(strsplit(kr_files[i],"layer")[[1]][2],1,2)), dimensionality=d)
+  scaled_rezo <- data.frame(variable = rep("dummy",length(3:11)), beta_weight = 0,std_err = 0,chisq = 0, pval=0, 
+                            filename = c(substring(kr_files[i],first=27,last=str_length(kr_files[i])-5)))
   # extract predictors from model
   predictors <- attr(scaled_betareg_acoustics_distance$modelInfo$terms$cond$fixed,"predvars")
   #Regression results for each predictor
@@ -243,7 +212,7 @@ for (i in 1: length(kr_files)){
   }
   scaled_rezo$proportion_exclude_SNR <- c(0,sapply(scaled_rezo$chisq[2:9],function (x) x/sum(scaled_rezo$chisq[2:9])))
   # save results
-  if (regression_results$beta_weight[1] == -999){
+  if (regression_results$filename[1] == "dummy"){
     regression_results <- rezo
     scaled_regression_results <- scaled_rezo
   } else {
@@ -253,8 +222,8 @@ for (i in 1: length(kr_files)){
                                        scaled_rezo)
   }
   # write out results
-  write.csv(regression_results,"intelligibility_by_all_results.csv",row.names=F)
-  write.csv(scaled_regression_results,"intelligibility_by_all_results_scaled.csv",row.names=F)
+  write.csv(regression_results,"intelligibility_by_all_results_Korean_optim_test.csv",row.names=F)
+  write.csv(scaled_regression_results,"intelligibility_by_all_results_scaled_Korean_optim_test.csv",row.names=F)
   
-} # for each layer
-} # for each dimensionality
+} # for each filename
+

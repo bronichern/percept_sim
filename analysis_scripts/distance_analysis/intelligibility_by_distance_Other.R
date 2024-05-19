@@ -27,7 +27,7 @@ for (lang in c("CMN","SHS","KR")){
     distance_data <- read.csv("./MFCC_DTW_baseline/KR/KR_MFCC_BASELINE.csv") %>% separate(speaker1_word_wid,into=c("Subject_1_ID","N1","Word","N2"),sep="_") %>% 
       separate(speaker2_word_wid,into=c("Subject_2_ID","N3","Word2","N4"),sep="_")
     # Get L2 speaker IDs
-    summary_L2 <- distance_data %>% filter (group == "K") %>% 
+    summary_L2 <- distance_data %>% filter (group == "K_EN") %>% 
       summarise (talkers1 = unique(Subject_1_ID),talkers2=unique(Subject_2_ID))
     L2_talkers <- unique(c(summary_L2$talkers1,summary_L2$talkers2))
     
@@ -78,9 +78,10 @@ intelligibility[,match("Sum.of..nsyll",colnames(intelligibility)):match("mean_di
 # center SNR
 intelligibility$center_SNR <- scale(intelligibility$SNR, center=T,scale=F)
 
-# created new dataframe with scaled acoustic variables
+# created new dataframe with scaled variables
 scaled_intelligibility <- intelligibility
 scaled_intelligibility[,match("Sum.of..nsyll",colnames(scaled_intelligibility)):match("mean_distance_dtw",colnames(scaled_intelligibility))] <- scale(scaled_intelligibility[,match("Sum.of..nsyll",colnames(scaled_intelligibility)):match("mean_distance_dtw",colnames(scaled_intelligibility))],center=T,scale=T)
+scaled_intelligibility$center_SNR <- scale(intelligibility$SNR, center=T,scale=T)
 
 # read in list of sentences used in intelligibility testing for each language
 intelligibility_filenames <- read.csv("intelligibility_filenames.csv")
