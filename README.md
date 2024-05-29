@@ -1,7 +1,7 @@
 # A perceptual similarity space for speech based on self-supervised speech representations
 
-## Reproducing the tables:
-To reproduce the tables, the analysis scripts are under "analysis_scripts". Note each subdirectory has it's corresponding readme file.
+## Reproducing the tables (i.e., the analysis):
+To reproduce the tables, the analysis scripts are under ["analysis_scripts"](https://github.com/bronichern/percept_sim/tree/main/analysis_scripts/). Note each subdirectory has it's corresponding readme file.
 The distance files are located under "distance_files".
 
 ## 1. Installation
@@ -95,3 +95,4 @@ python examples/hubert/simple_kmeans/dump_hubert_feature.py tsvs tsv_name path_o
 ```layer_number``` - Hubert layer we want to have as a feature extractor  
 ```tsv_name``` - the tsv file created in *section 3*)  
  ```output_path_for_features``` is the path for saving the feature file. The one created in *section 4* (i.e. cmn_ht1_layer12)
+
