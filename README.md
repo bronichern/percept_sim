@@ -7,10 +7,8 @@ The distance files are located under "distance_files".
 ## 1. Installation
 - Follow the installation instructions of fairseq: https://github.com/facebookresearch/fairseq/tree/main#requirements-and-installation
 - Go back to the soundscape repo
-- Run:
-```
-pip install -r requirements.txt
-```
+- Install the [environment.yml](https://github.com/bronichern/percept_sim/blob/main/environment.yml) file:  
+https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-from-an-environment-yml-file
 
 ## 2. Using the trajectory demo
 To render the notebook plots, use nbviewer. For instance, for the Korean dataset notebook, use:  
