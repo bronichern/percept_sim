@@ -1,4 +1,5 @@
 # A perceptual similarity space for speech based on self-supervised speech representations
+This repository contains the code base for reproducing the paper [A perceptual similarity space for speech based on self-supervised speech representations](https://doi.org/10.1121/10.0026358) by Bronya R. Chernyak, Ann R. Bradlow, Joseph Keshet, and Matthew Goldrick.
 
 ## Reproducing the tables (i.e., the analysis):
 To reproduce the tables, the analysis scripts are under ["analysis_scripts"](https://github.com/bronichern/percept_sim/tree/main/analysis_scripts/). Note each subdirectory has it's corresponding readme file.
