@@ -1,16 +1,15 @@
 # A perceptual similarity space for speech based on self-supervised speech representations
+This repository contains the code base for reproducing the paper [A perceptual similarity space for speech based on self-supervised speech representations](https://doi.org/10.1121/10.0026358) by Bronya R. Chernyak, Ann R. Bradlow, Joseph Keshet, and Matthew Goldrick.
 
-## Reproducing the tables:
-To reproduce the tables, the analysis scripts are under "analysis_scripts". Note each subdirectory has it's corresponding readme file.
+## Reproducing the tables (i.e., the analysis):
+To reproduce the tables, the analysis scripts are under ["analysis_scripts"](https://github.com/bronichern/percept_sim/tree/main/analysis_scripts/). Note each subdirectory has it's corresponding readme file.
 The distance files are located under "distance_files".
 
 ## 1. Installation
 - Follow the installation instructions of fairseq: https://github.com/facebookresearch/fairseq/tree/main#requirements-and-installation
-- Go back to the soundscape repo
-- Run:
-```
-pip install -r requirements.txt
-```
+- Go back to the percept_sim repo
+- Install the [environment.yml](https://github.com/bronichern/percept_sim/blob/main/environment.yml) file:  
+https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-from-an-environment-yml-file
 
 ## 2. Using the trajectory demo
 To render the notebook plots, use nbviewer. For instance, for the Korean dataset notebook, use:  
@@ -60,7 +59,7 @@ Within the directory you choose to store Hubert's feature file, create a directo
 ```reading_task``` - "HT1"/"HT2"/"LPP"/"DHR".  
 ```layer-number``` - Hubert layer we want to have as a feature extractor.  
 
-## Running Soundscape distance
+## Running Perceptual Similarity distance
 ```
 python run.py --reading_task task_name --data data_subset_name --layer hubert_layer --portion sentences_portion --verbose --feat_path hubert_feature_path --tsv_name tsv_name --project --output_path output_csv_dir
 ```
@@ -95,3 +94,4 @@ python examples/hubert/simple_kmeans/dump_hubert_feature.py tsvs tsv_name path_o
 ```layer_number``` - Hubert layer we want to have as a feature extractor  
 ```tsv_name``` - the tsv file created in *section 3*)  
  ```output_path_for_features``` is the path for saving the feature file. The one created in *section 4* (i.e. cmn_ht1_layer12)
+
