@@ -7,7 +7,7 @@ The distance files are located under "distance_files".
 
 ## 1. Installation
 - Follow the installation instructions of fairseq: https://github.com/facebookresearch/fairseq/tree/main#requirements-and-installation
-- Go back to the soundscape repo
+- Go back to the percept_sim repo
 - Install the [environment.yml](https://github.com/bronichern/percept_sim/blob/main/environment.yml) file:  
 https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-from-an-environment-yml-file
 
@@ -59,7 +59,7 @@ Within the directory you choose to store Hubert's feature file, create a directo
 ```reading_task``` - "HT1"/"HT2"/"LPP"/"DHR".  
 ```layer-number``` - Hubert layer we want to have as a feature extractor.  
 
-## Running Soundscape distance
+## Running Perceptual Similarity distance
 ```
 python run.py --reading_task task_name --data data_subset_name --layer hubert_layer --portion sentences_portion --verbose --feat_path hubert_feature_path --tsv_name tsv_name --project --output_path output_csv_dir
 ```
