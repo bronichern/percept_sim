@@ -91,7 +91,8 @@ Run the following to create the feature file:
 cd fairseq
 python examples/hubert/simple_kmeans/dump_hubert_feature.py tsvs tsv_name path_of_hubert_model layer_number 1 0 output_path_for_features
 ```
+```tsv``` - Path to the directory where the tsv files are located  
 ```layer_number``` - Hubert layer we want to have as a feature extractor  
-```tsv_name``` - the tsv file created in *section 3*)  
+```tsv_name``` - the tsv file created in *section 3* (should be located in the directory specified instead of the tsv argument)  
  ```output_path_for_features``` is the path for saving the feature file. The one created in *section 4* (i.e. cmn_ht1_layer12)
 
