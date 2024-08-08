@@ -1,0 +1,20 @@
+The script that preprocesses data is dependent on the files structure.
+
+Korean dataset structure:
+KEI_{L1}{Sex}{Number}_{Language of Sentence}{Sentence Number}.wav
+1. subjectID = {L1}{Sex}{Number}
+	a. L1 = E for English, K for Korean
+	b. Sex = M for Male, F for Female
+	c. Number = 2 digit code e.g. 01
+2. Sentence ID ={Language of Sentence}{Number}
+	a. Sentence Language = EN for English, KO for Korean
+	b. Sentence Number = 3 digit code e.g. 001
+
+ALLSTAR dataset structure:
+ALL_{Participant Number}_{Sex}_{L1}_{Task Language}_{Task}.wav
+1. Participant number = 3 digits
+2. Sex = M or F
+3. L1 = ENG for English, CMN for Mandarin, SHS = Spanish Heritage Speaker
+4. Task Language (same as 3)
+5. Task = HT1 for HINT sentences List 1, HT2 for HINT List 2
+
