@@ -26,6 +26,8 @@ python demo/kr_trajectories.py --path_to_config
 ```
 
 ## 3. Data preparation
+### **The scripts in the repository rely on the dataset file structure. You can see it [here](https://github.com/bronichern/percept_sim/blob/main/file_structure.txt) or refer to [SpeechBox](https://speechbox.linguistics.northwestern.edu/) metadata information.**    
+
 The following script can resample the data to 16khz, split it by sentence (if textgrids are available) and create a tsv file in tsvs/.
 ```
 python data_preprocess/prepare_data.py --path data_path --resample_waves --split_by_sentence --tsv_name name_of_tsv_file
@@ -47,7 +49,7 @@ python data_preprocess/prepare_data.py --path allstar_path --resample_waves --sp
 Note that the script will create a tsv for each reading task in the dataset.
 
 ## 4. Create a directory for Hubert's feature file:
-Throughout the next sections, there is a distinction between the ALLSTAR dataset, which has different reading tasks, and the Korean dataset which doesn't.  
+Throughout the next sections, there is a distinction between the ALLSTAR dataset, which has different reading tasks, and the Korean dataset, which doesn't.  
 ### Korean dataset
 Within the directory you choose to store Hubert's feature file, create a directory named kr_layer```layer-number``` (i.e kr_layer1)  
 ```layer-number``` - Hubert layer we want to have as a feature extractor  
