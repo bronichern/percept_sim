@@ -147,7 +147,7 @@ def main(args):
 
     if args.verbose:
         print(
-            f"Running distnace evaluation for layer {args.layer} with projection {use_dim_reduction} and projection type {projection_type}")
+            f"Running distance evaluation for layer {args.layer} with projection {use_dim_reduction} and projection type {projection_type}")
     print("File will be saved to ", filename)
     
     ids = np.array(df.index)       

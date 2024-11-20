@@ -8,9 +8,7 @@ The distance files are located under "distance_files".
 ## 1. Installation
 - Follow the installation instructions of fairseq: https://github.com/facebookresearch/fairseq/tree/main#requirements-and-installation
 - Go back to the percept_sim repo
-- Install the [environment.yml](https://github.com/bronichern/percept_sim/blob/main/environment.yml) file:  
-https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-from-an-environment-yml-file
-
+- Install the requirements with `pip install -r requirements.txt` 
 ## 2. Using the trajectory demo
 To render the notebook plots, use nbviewer. For instance, for the Korean dataset notebook, use:  
 https://nbviewer.org/github/bronichern/percept_sim/blob/main/kr_trajectories.ipynb
@@ -28,6 +26,8 @@ python demo/kr_trajectories.py --path_to_config
 ```
 
 ## 3. Data preparation
+### **The scripts in the repository rely on the dataset file structure. You can see it [here](https://github.com/bronichern/percept_sim/blob/main/file_structure.txt) or refer to [SpeechBox](https://speechbox.linguistics.northwestern.edu/) metadata information.**    
+
 The following script can resample the data to 16khz, split it by sentence (if textgrids are available) and create a tsv file in tsvs/.
 ```
 python data_preprocess/prepare_data.py --path data_path --resample_waves --split_by_sentence --tsv_name name_of_tsv_file
@@ -49,7 +49,7 @@ python data_preprocess/prepare_data.py --path allstar_path --resample_waves --sp
 Note that the script will create a tsv for each reading task in the dataset.
 
 ## 4. Create a directory for Hubert's feature file:
-Throughout the next sections, there is a distinction between the ALLSTAR dataset, which has different reading tasks, and the Korean dataset which doesn't.  
+Throughout the next sections, there is a distinction between the ALLSTAR dataset, which has different reading tasks, and the Korean dataset, which doesn't.  
 ### Korean dataset
 Within the directory you choose to store Hubert's feature file, create a directory named kr_layer```layer-number``` (i.e kr_layer1)  
 ```layer-number``` - Hubert layer we want to have as a feature extractor  
@@ -64,16 +64,16 @@ Within the directory you choose to store Hubert's feature file, create a directo
 python run.py --reading_task task_name --data data_subset_name --layer hubert_layer --portion sentences_portion --verbose --feat_path hubert_feature_path --tsv_name tsv_name --project --output_path output_csv_dir
 ```
  ```--data```: First, to know which dataset we process, ```--data``` argument is required. ```--data cmn``` or ```--data spn``` are for the ALLSTAR dataset, with L1 English speakers and L2 english speakers with L1 Mandarin or L1 Spanish, respectively; ```--data kr``` specifies to use the Korean dataset with L1 English speakers and L2 English speakers with Korean L1. The different datasets have different processing when creating their DataFrame.  
-```--portion```: Next, since there was a lot of data to process, the script processes subsets of the data. Meaning since we divided the waves by sentences, ```--portion``` accepts integers between 1-9 that specifies to process sentences with an id that begins with ```sentences_portion```. This parameter is only relevant for the ALLSTAR dataset (i.e with arguments ```--data cmn``` or ```--data spn```). 
-- If you wish to run using all the data instead of specifing ```--portion```, use ```--run_all_data```.
+```--portion```:  This parameter is only relevant for the ALLSTAR dataset (i.e., with arguments ```--data cmn``` or ```--data spn```). For the ALLSTAR dataset, since there was a lot of data to process, the script processes subsets of the data. Meaning since we divided the waves by sentences, ```--portion``` accepts integers between 1-9 that specifies to process sentences with an id that begins with ```sentences_portion```. 
+- If you wish to run using all the data instead of specifying ```--portion```, use ```--run_all_data```.
 
 ```--reading_task``` is relevant for the ALLSTAR dataset where task_name can be one of "HT1","HT2","LPP","DHR".  
-```--project``` argument is specified to project using TSNE. Remove this argument if you want to measure distance using all of HuBERT's features. If you want to use 2 dimension for TSNE instead of 3 (default), specify ```--tsne_dim 2```.  If you want to use UMAP or K-PCA instead, add the flag ```--umap``` or ```--pca``` respectively.
-At the end of processing a CSV file will be created in the directory ```output_csv_dir``` specified in the argument ```--output_path output_csv_dir```.  
+```--project``` argument is specified to project using TSNE. Remove this argument if you want to measure distance using all of HuBERT's features. If you want to use 2 dimensions for TSNE instead of 3 (default), specify ```--tsne_dim 2```.  If you want to use UMAP or K-PCA instead, add the flag ```--umap``` or ```--pca``` respectively.
+At the end of processing, a CSV file will be created in the directory ```output_csv_dir``` specified in the argument ```--output_path output_csv_dir```.  
 
-The script assumes that the required Hubert's feature file is saved in - see the next section for instruciton on how to create Hubert feature file: ```hubert_feature_path```/```data_subset_name```\_```task_name```\_```hubert_layer```/  
+The script assumes that the required Hubert's feature file is saved in - see the next section for instructions on how to create Hubert feature file: ```hubert_feature_path```/```data_subset_name```\_```task_name```\_```hubert_layer```/  
 
-For instance, for running ALLSTAR-HT1 dataset with L1 English speakers and L2 Manadarin speakers, with a feature file for layer 12 saved in hubert_feature_path/cmn_ht1_layer12, and with a tsv file created in tsvs/allstar_ht1.tsv run the following command:  
+For instance, for running ALLSTAR-HT1 dataset with L1 English speakers and L2 Mandarin speakers, with a feature file for layer 12 saved in hubert_feature_path/cmn_ht1_layer12, and with a tsv file created in tsvs/allstar_ht1.tsv run the following command:  
 ```
 python run.py --reading_task "HT1" --data "cmn" --layer 12 --portion 1 --verbose --feat_path hubert_feature_path/ --tsv_name allstar_ht1.tsv --project --output_path output_csv_dir
 ```
@@ -91,7 +91,8 @@ Run the following to create the feature file:
 cd fairseq
 python examples/hubert/simple_kmeans/dump_hubert_feature.py tsvs tsv_name path_of_hubert_model layer_number 1 0 output_path_for_features
 ```
+```tsv``` - Path to the directory where the tsv files are located  
 ```layer_number``` - Hubert layer we want to have as a feature extractor  
-```tsv_name``` - the tsv file created in *section 3*)  
+```tsv_name``` - the tsv file created in *section 3* (should be located in the directory specified instead of the tsv argument)  
  ```output_path_for_features``` is the path for saving the feature file. The one created in *section 4* (i.e. cmn_ht1_layer12)
 
